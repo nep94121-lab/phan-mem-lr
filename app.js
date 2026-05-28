@@ -1544,6 +1544,16 @@ function setupSplitEvents(splitBar) {
 function updateFilmstripUI() {
     filmstripList.innerHTML = "";
     
+    // Thêm class has-multiple vào container nếu có từ 2 ảnh trở lên
+    const filmstripEl = document.getElementById("filmstrip");
+    if (filmstripEl) {
+        if (imageList.length > 1) {
+            filmstripEl.classList.add("has-multiple");
+        } else {
+            filmstripEl.classList.remove("has-multiple");
+        }
+    }
+    
     imageList.forEach((imgObj) => {
         const item = document.createElement("div");
         item.className = "filmstrip-item" + (imgObj.id === activeImageId ? " active" : "");

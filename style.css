@@ -990,13 +990,17 @@ canvas#histogram-canvas {
     }
     
     .canvas-wrapper {
-        padding: 6px;
+        padding: 2px !important;
     }
     
     .canvas-scroll-container {
-        padding: 6px;
+        padding: 2px !important;
         border-radius: 4px;
         border-color: rgba(43, 49, 62, 0.5);
+    }
+    
+    .history-controls {
+        padding: 8px 12px !important;
     }
     
     .zoom-controls {
@@ -1004,7 +1008,12 @@ canvas#histogram-canvas {
     }
     
     .filmstrip-bar {
-        height: 70px;
+        display: none !important; /* Mặc định ẩn trên mobile */
+    }
+    
+    .filmstrip-bar.has-multiple {
+        display: flex !important; /* Chỉ hiện khi có nhiều ảnh */
+        height: 60px !important;
         padding: 4px 8px;
     }
     
@@ -1017,8 +1026,8 @@ canvas#histogram-canvas {
     }
     
     .filmstrip-item {
-        width: 60px;
-        height: 45px;
+        width: 50px;
+        height: 38px;
     }
     
     .filmstrip-item-title {
