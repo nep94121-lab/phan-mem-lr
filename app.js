@@ -647,6 +647,11 @@ const btnRotateRight = document.getElementById("btn-rotate-right");
 const btnFlipH = document.getElementById("btn-flip-h");
 const btnFlipV = document.getElementById("btn-flip-v");
 
+// History UI Elements (Undo, Redo, Reset)
+const btnActionUndo = document.getElementById("btn-action-undo");
+const btnActionRedo = document.getElementById("btn-action-redo");
+const btnActionReset = document.getElementById("btn-action-reset");
+
 // Initialize application
 function init() {
     initColorMixerSliders();
@@ -2188,6 +2193,24 @@ function setupEventListeners() {
         resetSliders();
         addHistoryStep("Khôi phục toàn bộ thanh trượt");
     });
+
+    // History Actions (Undo, Redo, Reset)
+    if (btnActionUndo) {
+        btnActionUndo.addEventListener("click", () => {
+            performUndo();
+        });
+    }
+    if (btnActionRedo) {
+        btnActionRedo.addEventListener("click", () => {
+            performRedo();
+        });
+    }
+    if (btnActionReset) {
+        btnActionReset.addEventListener("click", () => {
+            resetSliders();
+            addHistoryStep("Khôi phục toàn bộ thanh trượt");
+        });
+    }
     
     btnExport.addEventListener("click", exportImage);
 

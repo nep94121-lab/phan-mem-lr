@@ -470,6 +470,24 @@ canvas#histogram-canvas {
     display: block;
 }
 
+/* HISTORY CONTROLS */
+.history-controls {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    background-color: var(--bg-panel);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.history-controls .btn {
+    flex: 1;
+    font-size: 11px;
+    height: 28px;
+    padding: 0;
+    gap: 4px;
+    font-weight: 600;
+}
+
 /* SLIDERS */
 .sliders-container {
     flex: 1;
@@ -1085,12 +1103,11 @@ canvas#histogram-canvas {
     }
     
     .histogram-container {
-        padding: 8px 12px;
-        background-color: var(--bg-dark);
+        display: none !important;
     }
     
     .histogram-canvas-wrapper {
-        height: 60px;
+        display: none !important;
     }
     
     .slider-section-title {
