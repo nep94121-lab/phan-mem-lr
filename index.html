@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lightroom Web - Bộ Chỉnh Ảnh Chuyên Nghiệp</title>
+    <!-- Google Fonts Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- TOP HEADER -->
+        <header class="app-header">
+            <div class="logo">
+                <span class="logo-lr">Lr</span>
+                <span class="logo-text">Lightroom <span class="accent-text">Web</span></span>
+            </div>
+            <div class="header-actions">
+                <button id="btn-before-after" class="btn btn-secondary" title="Giữ để xem ảnh gốc (Phím \)">Xem Ảnh Gốc</button>
+                <button id="btn-split-view" class="btn btn-secondary" title="Bật/Tắt chia đôi màn hình so sánh (Phím Y)">Split View</button>
+                <button id="btn-reset" class="btn btn-secondary">Khôi Phục Slider</button>
+                <label for="upload-input" class="btn btn-primary">
+                    <span>Nhập Ảnh</span>
+                    <input type="file" id="upload-input" accept="image/*" style="display: none;" multiple>
+                </label>
+                <button id="btn-export" class="btn btn-accent">Xuất Ảnh</button>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT -->
+        <main class="app-main">
+            <!-- LEFT PANEL: Presets & History -->
+            <section class="panel-left">
+                <div class="panel-group">
+                    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Bộ Lọc Màu (Presets)</span>
+                        <button id="btn-create-preset" title="Tạo Preset mới từ slider hiện tại" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; font-weight: bold; transition: var(--transition); outline: none;">+</button>
+                    </div>
+                    <div class="presets-grid">
+                        <button class="preset-btn active" data-preset="default">Ảnh Gốc</button>
+                        <button class="preset-btn" data-preset="cinematic">Cinematic Tone</button>
+                        <button class="preset-btn" data-preset="vintage">Vintage Film</button>
+                        <button class="preset-btn" data-preset="bw">Đen Trắng (B&W)</button>
+                        <button class="preset-btn" data-preset="warm-sunset">Ấm Áp (Warm)</button>
+                        <button class="preset-btn" data-preset="cool-winter">Lạnh Lẽo (Cool)</button>
+                        <button class="preset-btn" data-preset="vibrant">Rực Rỡ</button>
+                    </div>
+                    <!-- Custom Presets section -->
+                    <div id="custom-presets-header" class="panel-header" style="margin-top: 14px; margin-bottom: 6px; display: none;">Bộ Lọc Của Tôi</div>
+                    <div id="custom-presets-list" class="presets-grid">
+                        <!-- Custom presets will go here -->
+                    </div>
+                </div>
+
+                <div class="panel-group history-group">
+                    <div class="panel-header">Lịch Sử Chỉnh Sửa</div>
+                    <div id="history-list" class="history-list">
+                        <div class="history-item active">Mở ảnh gốc</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MIDDLE WORKSPACE: Canvas display -->
+            <section class="workspace-center" id="drop-zone">
+                <div class="canvas-wrapper">
+                    <!-- Zoom Toolbar -->
+                    <div class="zoom-controls" id="zoom-toolbar" style="display: none;">
+                        <button class="zoom-btn" id="btn-zoom-out" title="Thu nhỏ">-</button>
+                        <input type="range" id="zoom-slider" min="10" max="200" value="100" class="zoom-slider">
+                        <button class="zoom-btn" id="btn-zoom-in" title="Phóng to">+</button>
+                        <button class="btn btn-secondary" id="btn-zoom-fit" style="height: 24px; padding: 2px 10px; font-size: 10px;">Vừa Khít</button>
+                        <span class="zoom-text" id="zoom-value">100%</span>
+                    </div>
+
+                    <div class="canvas-scroll-container" id="canvas-scroll">
+                        <div class="canvas-container-relative" id="canvas-container" style="position: relative; display: inline-block;">
+                            <canvas id="gl-canvas"></canvas>
+                            <!-- Khung lưới Crop Overlay -->
+                            <div id="crop-overlay" class="crop-overlay" style="display: none;">
+                                <div class="crop-grid-line crop-grid-h1"></div>
+                                <div class="crop-grid-line crop-grid-h2"></div>
+                                <div class="crop-grid-line crop-grid-v1"></div>
+                                <div class="crop-grid-line crop-grid-v2"></div>
+                                <div class="crop-handle crop-handle-nw"></div>
+                                <div class="crop-handle crop-handle-ne"></div>
+                                <div class="crop-handle crop-handle-sw"></div>
+                                <div class="crop-handle crop-handle-se"></div>
+                                <div class="crop-handle crop-handle-n"></div>
+                                <div class="crop-handle crop-handle-s"></div>
+                                <div class="crop-handle crop-handle-e"></div>
+                                <div class="crop-handle crop-handle-w"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="upload-placeholder" id="upload-placeholder">
+                        <div class="upload-icon">📸</div>
+                        <h3>Kéo thả ảnh vào đây để chỉnh sửa</h3>
+                        <p>Hỗ trợ định dạng JPG, PNG, WebP... dung lượng cao</p>
+                        <button class="btn btn-primary" onclick="document.getElementById('upload-input').click()">Chọn file từ máy</button>
+                    </div>
+                </div>
+                <!-- Filmstrip strip at bottom -->
+                <div class="filmstrip-bar" id="filmstrip">
+                    <div class="filmstrip-title">Thanh Cuộn Ảnh</div>
+                    <div class="filmstrip-items" id="filmstrip-list">
+                        <!-- Thumbnails will be generated here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT PANEL: Sliders & Histogram -->
+            <section class="panel-right">
+                <!-- Histogram Block -->
+                <div class="histogram-container">
+                    <div class="panel-header">Biểu Đồ Sáng (Histogram)</div>
+                    <div class="histogram-canvas-wrapper">
+                        <canvas id="histogram-canvas" width="256" height="100"></canvas>
+                    </div>
+                </div>
+
+                <!-- Sliders Panel -->
+                <div class="sliders-container">
+                    <!-- Crop & Rotate Group -->
+                    <div class="slider-section">
+                        <div class="slider-section-title" id="title-crop">Cắt & Xoay (Crop & Rotate)</div>
+                        <div class="slider-section-content" style="display: none;">
+                            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                                <button id="btn-crop-toggle" class="btn btn-secondary" style="flex: 1;">Bật Khung Cắt</button>
+                                <button id="btn-crop-apply" class="btn btn-primary" style="flex: 1; display: none;">Xác Nhận Cắt</button>
+                            </div>
+                            <!-- Aspect Ratio Dropdown -->
+                            <div class="slider-control" style="margin-bottom: 8px;">
+                                <div class="slider-info">
+                                    <span class="slider-name">Tỷ Lệ Khung Hình</span>
+                                </div>
+                                <select id="select-aspect" style="background: var(--bg-panel-light); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px; border-radius: 4px; outline: none; font-size: 11px; margin-top: 4px; font-family: var(--font-sans);">
+                                    <option value="free">Tự Do (Free)</option>
+                                    <option value="original">Gốc (Original)</option>
+                                    <option value="1:1">1:1 (Square)</option>
+                                    <option value="16:9">16:9 (Widescreen)</option>
+                                    <option value="4:3">4:3</option>
+                                    <option value="5:7">5:7</option>
+                                </select>
+                            </div>
+                            <!-- Rotate Angle Slider -->
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Góc Xoay</span>
+                                    <span class="slider-value" id="val-cropAngle">0°</span>
+                                </div>
+                                <input type="range" id="slider-cropAngle" min="-45" max="45" value="0" class="slider-input">
+                            </div>
+                            <!-- Rotate 90 & Flip buttons -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+                                <button id="btn-rotate-left" class="btn btn-secondary" style="font-size: 10px; height: 28px; padding: 2px;">Xoay Trái 90°</button>
+                                <button id="btn-rotate-right" class="btn btn-secondary" style="font-size: 10px; height: 28px; padding: 2px;">Xoay Phải 90°</button>
+                                <button id="btn-flip-h" class="btn btn-secondary" style="font-size: 10px; height: 28px; padding: 2px;">Lật Ngang</button>
+                                <button id="btn-flip-v" class="btn btn-secondary" style="font-size: 10px; height: 28px; padding: 2px;">Lật Dọc</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Basic Group -->
+                    <div class="slider-section open">
+                        <div class="slider-section-title">Điều Chỉnh Cơ Bản (Basic)</div>
+                        <div class="slider-section-content">
+                            <!-- White Balance -->
+                            <div class="slider-group-header">Cân Bằng Trắng</div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Nhiệt Độ (Temp)</span>
+                                    <span class="slider-value" id="val-temp">0</span>
+                                </div>
+                                <input type="range" id="slider-temp" min="-100" max="100" value="0" class="slider-input temp-slider">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Sắc Thái (Tint)</span>
+                                    <span class="slider-value" id="val-tint">0</span>
+                                </div>
+                                <input type="range" id="slider-tint" min="-100" max="100" value="0" class="slider-input tint-slider">
+                            </div>
+
+                            <!-- Tone -->
+                            <div class="slider-group-header">Tông Màu (Tone)</div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Phơi Sáng (Exposure)</span>
+                                    <span class="slider-value" id="val-exposure">0.00</span>
+                                </div>
+                                <input type="range" id="slider-exposure" min="-300" max="300" value="0" class="slider-input">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Tương Phản (Contrast)</span>
+                                    <span class="slider-value" id="val-contrast">0</span>
+                                </div>
+                                <input type="range" id="slider-contrast" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Vùng Sáng (Highlights)</span>
+                                    <span class="slider-value" id="val-highlights">0</span>
+                                </div>
+                                <input type="range" id="slider-highlights" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Vùng Tối (Shadows)</span>
+                                    <span class="slider-value" id="val-shadows">0</span>
+                                </div>
+                                <input type="range" id="slider-shadows" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Điểm Trắng (Whites)</span>
+                                    <span class="slider-value" id="val-whites">0</span>
+                                </div>
+                                <input type="range" id="slider-whites" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Điểm Đen (Blacks)</span>
+                                    <span class="slider-value" id="val-blacks">0</span>
+                                </div>
+                                <input type="range" id="slider-blacks" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+
+                            <!-- Presence -->
+                            <div class="slider-group-header">Độ Hiện Diện (Presence)</div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Độ Rõ Nét (Clarity)</span>
+                                    <span class="slider-value" id="val-clarity">0</span>
+                                </div>
+                                <input type="range" id="slider-clarity" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Khử Mù (Dehaze)</span>
+                                    <span class="slider-value" id="val-dehaze">0</span>
+                                </div>
+                                <input type="range" id="slider-dehaze" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Bão Hòa Chi Tiết (Vibrance)</span>
+                                    <span class="slider-value" id="val-vibrance">0</span>
+                                </div>
+                                <input type="range" id="slider-vibrance" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Độ Bão Hòa (Saturation)</span>
+                                    <span class="slider-value" id="val-saturation">0</span>
+                                </div>
+                                <input type="range" id="slider-saturation" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tone Curve Group -->
+                    <div class="slider-section open">
+                        <div class="slider-section-title" id="title-tone-curve">Đường Cong (Tone Curve)</div>
+                        <div class="slider-section-content">
+                            <!-- Tabs cho các kênh màu Tone Curve -->
+                            <div class="mixer-tabs curve-tabs" style="margin-bottom: 10px;">
+                                <button class="mixer-tab-btn active" data-curvetab="RGB" style="color: #fff;">RGB</button>
+                                <button class="mixer-tab-btn" data-curvetab="Red" style="color: #ff453a;">Red</button>
+                                <button class="mixer-tab-btn" data-curvetab="Green" style="color: #30d158;">Green</button>
+                                <button class="mixer-tab-btn" data-curvetab="Blue" style="color: #0a84ff;">Blue</button>
+                            </div>
+                            <!-- Curve Canvas -->
+                            <div class="curve-canvas-wrapper">
+                                <canvas id="curve-canvas" width="200" height="200"></canvas>
+                            </div>
+                            <!-- Sliders -->
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Vùng Sáng (Highlights)</span>
+                                    <span class="slider-value" id="val-curve-highlights">0</span>
+                                </div>
+                                <input type="range" id="slider-curve-highlights" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Sáng Nhẹ (Lights)</span>
+                                    <span class="slider-value" id="val-curve-lights">0</span>
+                                </div>
+                                <input type="range" id="slider-curve-lights" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Tối Nhẹ (Darks)</span>
+                                    <span class="slider-value" id="val-curve-darks">0</span>
+                                </div>
+                                <input type="range" id="slider-curve-darks" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Vùng Tối (Shadows)</span>
+                                    <span class="slider-value" id="val-curve-shadows">0</span>
+                                </div>
+                                <input type="range" id="slider-curve-shadows" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Color Grading Group -->
+                    <div class="slider-section open">
+                        <div class="slider-section-title" id="title-color-grading">Phân Tách Tông Màu (Color Grading)</div>
+                        <div class="slider-section-content">
+                            <div class="mixer-tabs">
+                                <button class="mixer-tab-btn active" data-cgtab="shadows">Vùng Tối</button>
+                                <button class="mixer-tab-btn" data-cgtab="midtones">Trung Tính</button>
+                                <button class="mixer-tab-btn" data-cgtab="highlights">Vùng Sáng</button>
+                                <button class="mixer-tab-btn" data-cgtab="global">Toàn Cục</button>
+                            </div>
+                            
+                            <!-- Shadows Sliders -->
+                            <div class="cg-controls-group active" id="cg-shadows-group">
+                                <div class="slider-control">
+                                    <div class="slider-info">
+                                        <span class="slider-name">Sắc Độ (Hue)</span>
+                                        <span class="slider-value" id="val-cgShadowsHue">0</span>
+                                    </div>
+                                    <input type="range" id="slider-cgShadowsHue" min="0" max="360" value="0" class="slider-input">
+                                </div>
+                                <div class="slider-control">
+                                    <div class="slider-info">
+                                        <span class="slider-name">Độ Bão Hòa (Sat)</span>
+                                        <span class="slider-value" id="val-cgShadowsSat">0</span>
+                                    </div>
+                                    <input type="range" id="slider-cgShadowsSat" min="0" max="100" value="0" class="slider-input">
+                                </div>
+                                <div class="slider-control">
+                                    <div class="slider-info">
+                                        <span class="slider-name">Độ Sáng (Lum)</span>
+                                        <span class="slider-value" id="val-cgShadowsLum">0</span>
+                                    </div>
+                                    <input type="range" id="slider-cgShadowsLum" min="-100" max="100" value="0" class="slider-input">
+                                </div>
+                            </div>
+
+                            <!-- Midtones Sliders -->
+                            <div class="cg-controls-group" id="cg-midtones-group" style="display: none;">
+                                <div class="slider-control">
+                                    <div class="slider-info">
+                                        <span class="slider-name">Sắc Độ (Hue)</span>
+                                        <span class="slider-value" id="val-cgMidtonesHue">0</span>
+                                    </div>
+                                    <input type="range" id="slider-cgMidtonesHue" min="0" max="360" value="0" class="slider-input">
+                                </div>
+                                <div class="slider-control">
+                                    <div class="slider-info">
+                                        <span class="slider-name">Độ Bão Hòa (Sat)</span>
+                                        <span class="slider-value" id="val-cgMidtonesSat">0</span>
+                                    </div>
+                                    <input type="range" id="slider-cgMidtonesSat" min="0" max="100" value="0" class="slider-input">
+                                </div>
+                                <div class="slider-control">
+                                    <div class="slider-info">
+                                        <span class="slider-name">Độ Sáng (Lum)</span>
+                                        <span class="slider-value" id="val-cgMidtonesLum">0</span>
+                                    </div>
+                                    <input type="range" id="slider-cgMidtonesLum" min="-100" max="100" value="0" class="slider-input">
+                                </div>
+                            </div>
+
+                            <!-- Highlights Sliders -->
+                            <div class="cg-controls-group" id="cg-highlights-group" style="display: none;">
+                                <div class="slider-control">
+                                    <div class="slider-info">
+                                        <span class="slider-name">Sắc Độ (Hue)</span>
+                                        <span class="slider-value" id="val-cgHighlightsHue">0</span>
+                                    </div>
+                                    <input type="range" id="slider-cgHighlightsHue" min="0" max="360" value="0" class="slider-input">
+                                </div>
+                                <div class="slider-control">
+                                    <div class="slider-info">
+                                        <span class="slider-name">Độ Bão Hòa (Sat)</span>
+                                        <span class="slider-value" id="val-cgHighlightsSat">0</span>
+                                    </div>
+                                    <input type="range" id="slider-cgHighlightsSat" min="0" max="100" value="0" class="slider-input">
+                                </div>
+                                <div class="slider-control">
+                                    <div class="slider-info">
+                                        <span class="slider-name">Độ Sáng (Lum)</span>
+                                        <span class="slider-value" id="val-cgHighlightsLum">0</span>
+                                    </div>
+                                    <input type="range" id="slider-cgHighlightsLum" min="-100" max="100" value="0" class="slider-input">
+                                </div>
+                            </div>
+
+                            <!-- Global Sliders -->
+                            <div class="cg-controls-group" id="cg-global-group" style="display: none;">
+                                <div class="slider-control">
+                                    <div class="slider-info">
+                                        <span class="slider-name">Sắc Độ (Hue)</span>
+                                        <span class="slider-value" id="val-cgGlobalHue">0</span>
+                                    </div>
+                                    <input type="range" id="slider-cgGlobalHue" min="0" max="360" value="0" class="slider-input">
+                                </div>
+                                <div class="slider-control">
+                                    <div class="slider-info">
+                                        <span class="slider-name">Độ Bão Hòa (Sat)</span>
+                                        <span class="slider-value" id="val-cgGlobalSat">0</span>
+                                    </div>
+                                    <input type="range" id="slider-cgGlobalSat" min="0" max="100" value="0" class="slider-input">
+                                </div>
+                                <div class="slider-control">
+                                    <div class="slider-info">
+                                        <span class="slider-name">Độ Sáng (Lum)</span>
+                                        <span class="slider-value" id="val-cgGlobalLum">0</span>
+                                    </div>
+                                    <input type="range" id="slider-cgGlobalLum" min="-100" max="100" value="0" class="slider-input">
+                                </div>
+                            </div>
+
+                            <!-- Global Blending and Balance Controls -->
+                            <div class="slider-group-header">Hòa Trộn & Cân Bằng</div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Hòa Trộn (Blending)</span>
+                                    <span class="slider-value" id="val-cgBlending">50</span>
+                                </div>
+                                <input type="range" id="slider-cgBlending" min="0" max="100" value="50" class="slider-input">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Cân Bằng (Balance)</span>
+                                    <span class="slider-value" id="val-cgBalance">0</span>
+                                </div>
+                                <input type="range" id="slider-cgBalance" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Color Mixer Group -->
+                    <div class="slider-section open">
+                        <div class="slider-section-title" id="title-color-mixer">Bộ Trộn Màu (Color Mixer)</div>
+                        <div class="slider-section-content" id="color-mixer-content">
+                            <div class="mixer-tabs">
+                                <button class="mixer-tab-btn active" data-tab="hue">Sắc Độ (Hue)</button>
+                                <button class="mixer-tab-btn" data-tab="sat">Bão Hòa (Sat)</button>
+                                <button class="mixer-tab-btn" data-tab="lum">Độ Sáng (Lum)</button>
+                            </div>
+                            <div id="mixer-sliders-container">
+                                <!-- Sinh tự động bằng JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Effects Group -->
+                    <div class="slider-section open">
+                        <div class="slider-section-title" id="title-effects">Hiệu Ứng (Effects)</div>
+                        <div class="slider-section-content">
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Viền Tối (Vignette)</span>
+                                    <span class="slider-value" id="val-vignette">0</span>
+                                </div>
+                                <input type="range" id="slider-vignette" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Hạt Phim (Grain)</span>
+                                    <span class="slider-value" id="val-grain">0</span>
+                                </div>
+                                <input type="range" id="slider-grain" min="0" max="100" value="0" class="slider-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detail Group -->
+                    <div class="slider-section">
+                        <div class="slider-section-title" id="title-detail">Chi Tiết (Detail)</div>
+                        <div class="slider-section-content">
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Làm Nét (Sharpening)</span>
+                                    <span class="slider-value" id="val-detailSharpening">0</span>
+                                </div>
+                                <input type="range" id="slider-detailSharpening" min="0" max="100" value="0" class="slider-input">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Khử Nhiễu Hạt (Noise Reduction)</span>
+                                    <span class="slider-value" id="val-detailNoise">0</span>
+                                </div>
+                                <input type="range" id="slider-detailNoise" min="0" max="100" value="0" class="slider-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calibration Group -->
+                    <div class="slider-section">
+                        <div class="slider-section-title" id="title-calibration">Hiệu Chuẩn Sắc Độ (Calibration)</div>
+                        <div class="slider-section-content">
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Sắc Thái Vùng Tối (Shadow Tint)</span>
+                                    <span class="slider-value" id="val-calShadowTint">0</span>
+                                </div>
+                                <input type="range" id="slider-calShadowTint" min="-100" max="100" value="0" class="slider-input tint-slider">
+                            </div>
+                            
+                            <div class="slider-group-header">Red Primary</div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Sắc Độ (Hue)</span>
+                                    <span class="slider-value" id="val-calRedHue">0</span>
+                                </div>
+                                <input type="range" id="slider-calRedHue" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Độ Bão Hòa (Sat)</span>
+                                    <span class="slider-value" id="val-calRedSat">0</span>
+                                </div>
+                                <input type="range" id="slider-calRedSat" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+
+                            <div class="slider-group-header">Green Primary</div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Sắc Độ (Hue)</span>
+                                    <span class="slider-value" id="val-calGreenHue">0</span>
+                                </div>
+                                <input type="range" id="slider-calGreenHue" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Độ Bão Hòa (Sat)</span>
+                                    <span class="slider-value" id="val-calGreenSat">0</span>
+                                </div>
+                                <input type="range" id="slider-calGreenSat" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+
+                            <div class="slider-group-header">Blue Primary</div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Sắc Độ (Hue)</span>
+                                    <span class="slider-value" id="val-calBlueHue">0</span>
+                                </div>
+                                <input type="range" id="slider-calBlueHue" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                            <div class="slider-control">
+                                <div class="slider-info">
+                                    <span class="slider-name">Độ Bão Hòa (Sat)</span>
+                                    <span class="slider-value" id="val-calBlueSat">0</span>
+                                </div>
+                                <input type="range" id="slider-calBlueSat" min="-100" max="100" value="0" class="slider-input">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

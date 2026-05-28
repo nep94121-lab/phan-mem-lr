@@ -1,0 +1,66 @@
+{
+  "mcpServers": {
+    "firecrawl": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.firecrawl.dev/v2/mcp",
+        "--header",
+        "Authorization: Bearer fc-1f85d1f7cbb64363b42ee18cf963b165"
+      ],
+      "env": {}
+    },
+    "ssh-remote": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\Admin\\.gemini\\ssh-mcp-server\\dist\\index.js"
+      ],
+      "env": {
+        "MACHINES_PATH": "C:\\Users\\Admin\\.gemini\\ssh-mcp-server\\machines.json"
+      }
+    },
+    "browser-use": {
+      "command": "C:\\Users\\Admin\\.local\\bin\\uvx.exe",
+      "args": [
+        "--python",
+        "3.12",
+        "--from",
+        "browser-use[cli]",
+        "browser-use",
+        "--mcp"
+      ],
+      "env": {
+        "BROWSER_USE_HEADLESS": "false",
+        "CHROME_USER_DATA": "C:\\Users\\Admin\\.browser-use-profile",
+        "CHROME_PROFILE_DIRECTORY": "Default",
+        "GEMINI_API_KEY": "AIzaSyAKJA7L-Kb8Uu7R5SNYYk-BbSs-whB4Lqw",
+        "OPENAI_API_KEY": "AIzaSyAKJA7L-Kb8Uu7R5SNYYk-BbSs-whB4Lqw",
+        "OPENAI_BASE_URL": "https://generativelanguage.googleapis.com/v1beta/openai/"
+      }
+    },
+    "codebase-memory": {
+      "command": "C:\\Users\\Admin\\AppData\\Local\\Programs\\codebase-memory-mcp\\codebase-memory-mcp.exe",
+      "args": [
+        "--ui=true",
+        "--port=9749"
+      ],
+      "env": {}
+    },
+    "obsidian": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\Admin\\.gemini\\antigravity\\obsidian-wrapper.js"
+      ],
+      "env": {}
+    },
+    "windows-computer-use": {
+      "command": "C:\\Users\\Admin\\.local\\bin\\uvx.exe",
+      "args": [
+        "windows-mcp",
+        "serve"
+      ],
+      "env": {}
+    }
+  }
+}
