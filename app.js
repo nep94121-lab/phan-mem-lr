@@ -1604,6 +1604,8 @@ function switchActiveImage(id) {
             cropAngle, cropFlipH, cropFlipV, cropRotate90,
             cropRect: { ...cropRect }
         };
+        currentImg.historyStack = JSON.parse(JSON.stringify(historyStack));
+        currentImg.historyIndex = historyIndex;
     }
     
     // 2. Load next active image settings
@@ -1626,6 +1628,8 @@ function switchActiveImage(id) {
     cropFlipV = newImg.cropState.cropFlipV;
     cropRotate90 = newImg.cropState.cropRotate90;
     cropRect = { ...newImg.cropState.cropRect };
+    historyStack = JSON.parse(JSON.stringify(newImg.historyStack));
+    historyIndex = newImg.historyIndex;
     
     // 3. Reset canvases/textures
     uploadPlaceholder.style.display = "none";
@@ -1667,9 +1671,8 @@ function switchActiveImage(id) {
     drawToneCurveCanvas();
     updateFilmstripUI();
     
-    // Clear undo/redo lists on swap
-    undoStack.length = 0;
-    redoStack.length = 0;
+    // Update History list view on swap
+    updateHistoryUI();
     
     render();
     drawHistogram();
@@ -1837,88 +1840,19 @@ function applyCustomPreset(name) {
 // ----------------- UNDO & REDO MECHANISM -----------------
 
 function saveUndoState() {
-    const state = {
-        sliders: { ...sliders },
-        curves: JSON.parse(JSON.stringify(curvePoints)),
-        crop: {
-            cropAngle, cropFlipH, cropFlipV, cropRotate90,
-            cropRect: { ...cropRect }
-        }
-    };
-    
-    undoStack.push(state);
-    if (undoStack.length > MAX_STACK_SIZE) {
-        undoStack.shift();
-    }
-    
-    // Clear redo stack on new action
-    redoStack.length = 0;
+    // Hàm rỗng để tương thích với các sự kiện cũ, trạng thái thật được lưu qua addHistoryStep
 }
 
 function performUndo() {
-    if (undoStack.length === 0) return;
-    
-    const currentState = {
-        sliders: { ...sliders },
-        curves: JSON.parse(JSON.stringify(curvePoints)),
-        crop: {
-            cropAngle, cropFlipH, cropFlipV, cropRotate90,
-            cropRect: { ...cropRect }
-        }
-    };
-    redoStack.push(currentState);
-    
-    const prevState = undoStack.pop();
-    Object.assign(sliders, prevState.sliders);
-    Object.keys(curvePoints).forEach(key => {
-        curvePoints[key] = JSON.parse(JSON.stringify(prevState.curves[key]));
-    });
-    cropAngle = prevState.crop.cropAngle;
-    cropFlipH = prevState.crop.cropFlipH;
-    cropFlipV = prevState.crop.cropFlipV;
-    cropRotate90 = prevState.crop.cropRotate90;
-    cropRect = { ...prevState.crop.cropRect };
-    
-    syncSlidersToUI();
-    updateLutTextures();
-    drawToneCurveCanvas();
-    render();
-    drawHistogram();
-    
-    addHistoryStep("Hoàn tác (Undo)");
+    if (historyIndex > 0) {
+        goToHistoryIndex(historyIndex - 1);
+    }
 }
 
 function performRedo() {
-    if (redoStack.length === 0) return;
-    
-    const currentState = {
-        sliders: { ...sliders },
-        curves: JSON.parse(JSON.stringify(curvePoints)),
-        crop: {
-            cropAngle, cropFlipH, cropFlipV, cropRotate90,
-            cropRect: { ...cropRect }
-        }
-    };
-    undoStack.push(currentState);
-    
-    const nextState = redoStack.pop();
-    Object.assign(sliders, nextState.sliders);
-    Object.keys(curvePoints).forEach(key => {
-        curvePoints[key] = JSON.parse(JSON.stringify(nextState.curves[key]));
-    });
-    cropAngle = nextState.crop.cropAngle;
-    cropFlipH = nextState.crop.cropFlipH;
-    cropFlipV = nextState.crop.cropFlipV;
-    cropRotate90 = nextState.crop.cropRotate90;
-    cropRect = { ...nextState.crop.cropRect };
-    
-    syncSlidersToUI();
-    updateLutTextures();
-    drawToneCurveCanvas();
-    render();
-    drawHistogram();
-    
-    addHistoryStep("Làm lại (Redo)");
+    if (historyIndex < historyStack.length - 1) {
+        goToHistoryIndex(historyIndex + 1);
+    }
 }
 
 
@@ -2358,7 +2292,27 @@ function loadMultipleImages(files) {
                         cropFlipV: 1,
                         cropRotate90: 0,
                         cropRect: { x: 0, y: 0, w: 1, h: 1 }
-                    }
+                    },
+                    historyStack: [
+                        {
+                            label: "Mở ảnh gốc",
+                            sliders: { ...PRESETS.default },
+                            curves: {
+                                RGB: [[0, 0], [1, 1]],
+                                Red: [[0, 0], [1, 1]],
+                                Green: [[0, 0], [1, 1]],
+                                Blue: [[0, 0], [1, 1]]
+                            },
+                            crop: {
+                                cropAngle: 0,
+                                cropFlipH: 1,
+                                cropFlipV: 1,
+                                cropRotate90: 0,
+                                cropRect: { x: 0, y: 0, w: 1, h: 1 }
+                            }
+                        }
+                    ],
+                    historyIndex: 0
                 };
 
                 imageList.push(imgObj);
@@ -2719,21 +2673,81 @@ function drawHistogram() {
 }
 
 function addHistoryStep(label) {
+    if (!originalImage) return;
+    
+    // Cắt bỏ phần stack phía sau historyIndex (nếu sếp đang đứng ở giữa do đã Undo trước đó)
+    historyStack = historyStack.slice(0, historyIndex + 1);
+    
+    // Thêm trạng thái hiện tại vào stack
+    historyStack.push({
+        label: label,
+        sliders: { ...sliders },
+        curves: JSON.parse(JSON.stringify(curvePoints)),
+        crop: {
+            cropAngle, cropFlipH, cropFlipV, cropRotate90,
+            cropRect: { ...cropRect }
+        }
+    });
+    
+    historyIndex = historyStack.length - 1;
+    updateHistoryUI();
+}
+
+function updateHistoryUI() {
+    if (!historyList) return;
     historyList.innerHTML = "";
     
-    const rootItem = document.createElement("div");
-    rootItem.className = "history-item";
-    rootItem.textContent = "Mở ảnh gốc";
-    rootItem.addEventListener("click", () => {
-        resetSliders();
-    });
-    historyList.appendChild(rootItem);
+    // Chỉ vẽ các bước từ 0 đến historyIndex (các bước đã bị Undo sẽ biến mất ngay)
+    for (let i = 0; i <= historyIndex; i++) {
+        const step = historyStack[i];
+        if (!step) continue;
+        
+        const item = document.createElement("div");
+        item.className = "history-item" + (i === historyIndex ? " active" : "");
+        item.textContent = step.label;
+        
+        // Nhấp trực tiếp vào bước lịch sử bất kỳ để quay lại
+        item.addEventListener("click", () => {
+            goToHistoryIndex(i);
+        });
+        
+        historyList.appendChild(item);
+    }
+    
+    // Tự động cuộn xuống cuối danh sách lịch sử
+    historyList.scrollTop = historyList.scrollHeight;
+}
 
-    // Simple history list visual tracker
-    const item = document.createElement("div");
-    item.className = "history-item active";
-    item.textContent = label;
-    historyList.appendChild(item);
+function goToHistoryIndex(index) {
+    if (index < 0 || index >= historyStack.length) return;
+    
+    historyIndex = index;
+    const state = historyStack[historyIndex];
+    
+    // Khôi phục trạng thái sliders
+    Object.assign(sliders, state.sliders);
+    
+    // Khôi phục trạng thái curves
+    Object.keys(curvePoints).forEach(key => {
+        if (state.curves && state.curves[key]) {
+            curvePoints[key] = JSON.parse(JSON.stringify(state.curves[key]));
+        }
+    });
+    
+    // Khôi phục trạng thái crop
+    cropAngle = state.crop.cropAngle;
+    cropFlipH = state.crop.cropFlipH;
+    cropFlipV = state.crop.cropFlipV;
+    cropRotate90 = state.crop.cropRotate90;
+    cropRect = { ...state.crop.cropRect };
+    
+    // Cập nhật giao diện và WebGL
+    syncSlidersToUI();
+    updateLutTextures();
+    drawToneCurveCanvas();
+    render();
+    drawHistogram();
+    updateHistoryUI();
 }
 
 // Dom Loaded entry point
