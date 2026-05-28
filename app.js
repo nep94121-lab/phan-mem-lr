@@ -725,21 +725,35 @@ function initMobileNavigation() {
         });
     }
     
-    // Bổ sung touch events cho canvas để ấn giữ xem ảnh gốc
+    // Nhấn giữ chuột (PC) hoặc chạm giữ (Mobile) trực tiếp lên canvas ảnh để xem ảnh gốc
     if (canvas) {
-        canvas.addEventListener("touchstart", (e) => {
-            if (e.touches.length === 1 && !isCropActive && !isDraggingSplit) {
+        const setOriginal = (e) => {
+            if (!isCropActive && !isDraggingSplit && !isDraggingCurvePoint) {
                 isOriginalView = true;
                 render();
             }
-        }, { passive: true });
+        };
         
-        canvas.addEventListener("touchend", () => {
+        const setEdited = () => {
             if (isOriginalView) {
                 isOriginalView = false;
                 render();
             }
+        };
+
+        // Desktop Mouse Click Hold
+        canvas.addEventListener("mousedown", (e) => {
+            if (e.button === 0) setOriginal(e);
         });
+        canvas.addEventListener("mouseup", setEdited);
+        canvas.addEventListener("mouseleave", setEdited);
+
+        // Mobile Touch Hold
+        canvas.addEventListener("touchstart", (e) => {
+            if (e.touches.length === 1) setOriginal(e);
+        }, { passive: true });
+        canvas.addEventListener("touchend", setEdited);
+        canvas.addEventListener("touchcancel", setEdited);
     }
 }
 
