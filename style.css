@@ -860,4 +860,267 @@ canvas#histogram-canvas {
     text-align: center;
 }
 
+/* MOBILE NAVIGATION BAR */
+.mobile-nav-bar {
+    display: none;
+}
+
+/* RESPONSIVE LAYOUT FOR MOBILE DEVICES */
+@media (max-width: 768px) {
+    body {
+        overflow: hidden;
+    }
+    
+    .mobile-nav-bar {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+        background-color: var(--bg-dark);
+        border-top: 1px solid var(--border-color);
+        z-index: 1010;
+        box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
+    }
+    
+    .mobile-nav-btn {
+        flex: 1;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        cursor: pointer;
+        font-family: var(--font-sans);
+        transition: var(--transition);
+        outline: none;
+        height: 100%;
+    }
+    
+    .mobile-nav-btn.active {
+        color: var(--accent);
+        background-color: rgba(255, 255, 255, 0.02);
+    }
+    
+    .mobile-nav-icon {
+        font-size: 16px;
+    }
+    
+    .mobile-nav-text {
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+    }
+    
+    .app-container {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .app-header {
+        height: 48px;
+        padding: 0 8px;
+    }
+    
+    .logo-text {
+        font-size: 12px;
+    }
+    
+    .logo-lr {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+    }
+    
+    .header-actions {
+        gap: 4px;
+    }
+    
+    .header-actions .btn {
+        height: 28px;
+        padding: 2px 8px;
+        font-size: 10px;
+        border-radius: 4px;
+    }
+    
+    /* Ẩn bớt nút phụ trên mobile để chống chật chội */
+    #btn-reset, #btn-split-view {
+        display: none !important;
+    }
+    
+    .app-main {
+        flex-direction: column;
+        position: relative;
+        height: calc(100vh - 48px - 56px);
+        overflow: hidden;
+        flex: 1;
+    }
+    
+    /* Canvas workspace */
+    .workspace-center {
+        width: 100% !important;
+        height: 100% !important;
+        flex: none;
+        transition: height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 10;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .canvas-wrapper {
+        padding: 6px;
+    }
+    
+    .canvas-scroll-container {
+        padding: 6px;
+        border-radius: 4px;
+        border-color: rgba(43, 49, 62, 0.5);
+    }
+    
+    .zoom-controls {
+        display: none !important; /* Không dùng thanh zoom slider trên điện thoại */
+    }
+    
+    .filmstrip-bar {
+        height: 70px;
+        padding: 4px 8px;
+    }
+    
+    .filmstrip-title {
+        display: none !important;
+    }
+    
+    .filmstrip-items {
+        gap: 6px;
+    }
+    
+    .filmstrip-item {
+        width: 60px;
+        height: 45px;
+    }
+    
+    .filmstrip-item-title {
+        font-size: 6px;
+    }
+    
+    /* Cột Panels trái & phải chuyển thành Pop-up trượt ở dưới */
+    .panel-left, .panel-right {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100% !important;
+        height: 50% !important;
+        z-index: 1000;
+        border: none;
+        border-top: 1px solid var(--border-color);
+        background-color: var(--bg-dark);
+        display: none !important; /* Mặc định ẩn, bật bằng JS class */
+        box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
+        overflow-y: auto;
+    }
+    
+    /* Trạng thái hiển thị theo Class của body */
+    body.mobile-show-canvas .workspace-center {
+        height: 100% !important;
+    }
+    
+    body.mobile-show-presets .workspace-center,
+    body.mobile-show-history .workspace-center,
+    body.mobile-show-sliders .workspace-center {
+        height: 50% !important;
+    }
+    
+    /* Panel Trái: Presets */
+    body.mobile-show-presets .panel-left {
+        display: flex !important;
+        flex-direction: column;
+    }
+    body.mobile-show-presets .panel-left .history-group {
+        display: none !important;
+    }
+    body.mobile-show-presets .panel-left .panel-group:not(.history-group) {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 12px;
+        border: none;
+    }
+    
+    /* Panel Trái: History */
+    body.mobile-show-history .panel-left {
+        display: flex !important;
+        flex-direction: column;
+    }
+    body.mobile-show-history .panel-left .panel-group:not(.history-group) {
+        display: none !important;
+    }
+    body.mobile-show-history .panel-left .history-group {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 12px;
+        border: none;
+        height: 100%;
+    }
+    body.mobile-show-history .panel-left .history-list {
+        max-height: none !important;
+        flex: 1;
+    }
+    
+    /* Panel Phải: Sliders */
+    body.mobile-show-sliders .panel-right {
+        display: flex !important;
+        flex-direction: column;
+    }
+    
+    .sliders-container {
+        overflow-y: auto;
+        flex: 1;
+        padding-bottom: 20px;
+    }
+    
+    .histogram-container {
+        padding: 8px 12px;
+        background-color: var(--bg-dark);
+    }
+    
+    .histogram-canvas-wrapper {
+        height: 60px;
+    }
+    
+    .slider-section-title {
+        padding: 8px 12px;
+        font-size: 11px;
+    }
+    
+    .slider-section-content {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+    
+    .slider-control {
+        gap: 4px;
+    }
+    
+    .slider-group-header {
+        font-size: 10px;
+        margin-top: 2px;
+    }
+    
+    /* Hỗ trợ hiển thị canvas crop overlay vừa vặn */
+    .crop-overlay {
+        border-width: 1px;
+    }
+    .crop-handle {
+        width: 14px;
+        height: 14px;
+    }
+}
+
+
 

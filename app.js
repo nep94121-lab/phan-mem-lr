@@ -673,6 +673,69 @@ function init() {
     
     setupSplitEvents(splitBar);
     setupHistogramEvents();
+    initMobileNavigation();
+}
+
+// Mobile responsive tab bar and touch events logic
+function initMobileNavigation() {
+    const mobileBtns = document.querySelectorAll(".mobile-nav-btn");
+    if (mobileBtns.length === 0) return;
+    
+    mobileBtns.forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            const targetBtn = e.currentTarget;
+            mobileBtns.forEach(b => b.classList.remove("active"));
+            targetBtn.classList.add("active");
+            
+            const tabName = targetBtn.dataset.tab;
+            
+            // Xoá tất cả class mobile-show cũ trên body
+            document.body.classList.remove("mobile-show-canvas", "mobile-show-presets", "mobile-show-sliders", "mobile-show-history");
+            
+            // Thêm class tương ứng
+            document.body.classList.add(`mobile-show-${tabName}`);
+            
+            // Gọi resize/fit canvas khi chuyển tab để ảnh luôn khít vùng hiển thị
+            setTimeout(() => {
+                if (originalImage) {
+                    zoomFit();
+                }
+            }, 150);
+        });
+    });
+    
+    // Mặc định thêm class canvas cho body
+    document.body.classList.add("mobile-show-canvas");
+    
+    // Bổ sung touch events cho nút xem ảnh gốc
+    if (btnBeforeAfter) {
+        btnBeforeAfter.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            isOriginalView = true;
+            render();
+        }, { passive: false });
+        btnBeforeAfter.addEventListener("touchend", () => {
+            isOriginalView = false;
+            render();
+        });
+    }
+    
+    // Bổ sung touch events cho canvas để ấn giữ xem ảnh gốc
+    if (canvas) {
+        canvas.addEventListener("touchstart", (e) => {
+            if (e.touches.length === 1 && !isCropActive && !isDraggingSplit) {
+                isOriginalView = true;
+                render();
+            }
+        }, { passive: true });
+        
+        canvas.addEventListener("touchend", () => {
+            if (isOriginalView) {
+                isOriginalView = false;
+                render();
+            }
+        });
+    }
 }
 
 // WebGL Initialization
